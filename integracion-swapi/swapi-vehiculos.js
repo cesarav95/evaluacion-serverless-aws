@@ -20,7 +20,7 @@ module.exports.recuperar_vehiculos = async (event, context, callback) => {
     let array_vehiculos = [];
     let e;
     for(e of data_vehiculos){
-      //Mapear los atributos del modelo film y traducirlos a español
+      //Mapear los atributos del modelo vehicles y traducirlos a español
       let datos_esp_vehiculos = {
         capacidad_de_carga : e.cargo_capacity,
         consumibles :e.consumables,

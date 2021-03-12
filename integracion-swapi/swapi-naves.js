@@ -20,7 +20,7 @@ module.exports.recuperar_naves = async (event, context, callback) => {
     let array_naves = [];
     let e;
     for(e of data_naves){
-      //Mapear los atributos del modelo film y traducirlos a español
+      //Mapear los atributos del modelo starships y traducirlos a español
       let datos_esp_nave = {
         MGLT : e.MGLT,
         capacidad_carga :e.cargo_capacity,

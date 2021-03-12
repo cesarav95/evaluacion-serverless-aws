@@ -20,7 +20,7 @@ module.exports.recuperar_especies = async (event, context, callback) => {
     let array_especies = [];
     let e;
     for(e of data_species){
-      //Mapear los atributos del modelo film y traducirlos a español
+      //Mapear los atributos del modelo species y traducirlos a español
       let datos_esp_especie = {
         nombre : e.name,
         clasificacion :e.classification,

@@ -20,7 +20,7 @@ module.exports.recuperar_personas = async (event, context, callback) => {
     let array_personas = [];
     let e;
     for(e of data_personas){
-      //Mapear los atributos del modelo film y traducirlos a español
+      //Mapear los atributos del modelo people y traducirlos a español
       let datos_esp_persona = {
         anio_nacimiento : e.birth_year,
         color_ojo :e.eye_color,

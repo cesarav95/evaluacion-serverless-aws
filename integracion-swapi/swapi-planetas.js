@@ -20,7 +20,7 @@ module.exports.recuperar_planetas = async (event, context, callback) => {
     let array_planetas = [];
     let e;
     for(e of data_planetas){
-      //Mapear los atributos del modelo film y traducirlos a español
+      //Mapear los atributos del modelo planets y traducirlos a español
       let datos_esp_planeta = {
         clima : e.climate,
         creado :e.created,
