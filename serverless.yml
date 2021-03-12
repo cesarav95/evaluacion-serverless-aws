@@ -1,0 +1,85 @@
+service: evaluacion-aws-api
+# app and org for use with dashboard.serverless.com
+#app: your-app-name
+#org: your-org-name
+frameworkVersion: '2'
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  lambdaHashingVersion: 20201221
+  stage: dev
+  region: us-east-2
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:DescribeTable
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: "arn:aws:dynamodb:${self:provider.region}:*:*"
+
+#Para hacer pruebas en local
+plugins:
+  - serverless-offline
+
+custom:
+  env: ${file(./${self:provider.stage}.env.json)}
+
+functions:
+  #Funciones de integracion con Swapi
+  consultar-swapi-lista: # Funcion para recuperar datos de SWAPI , una lista de objetos
+    handler: integracion-swapi/swapi-peliculas.recuperar_peliculas
+    events:
+      - httpApi: # Crear end-point GET para recuperar datos de SWAPI
+          path: /api/swapi-peliculas
+          method: get  
+    environment:
+      BASE_URL_SWAPI: ${self:custom.env.BASE_URL_SWAPI}
+
+  consultar-swapi-item: # Funcion para recuperar datos de SWAPI de un solo objeto
+    handler: integracion-swapi/swapi-peliculas.recuperar_pelicula
+    events:
+      - httpApi: # Crear end-point GET para recuperar datos de SWAPI
+          path: /api/swapi-peliculas/{id}
+          method: get  
+    environment:
+      BASE_URL_SWAPI: ${self:custom.env.BASE_URL_SWAPI}
+     
+
+  # Funciones para consultar y guardar datos en DynamoDB    
+  consultar-db: # Funcion para consultar datos de DynamoDB
+    handler: funciones-db/recuperar-datos.recuperar_productos
+    events:
+      - httpApi: #Crear end-point  GET para recuperar datos de la base de datos
+          path: /api/lista-productos
+          method: get
+
+  guardar-db: # Funcion para guardar datos del modelo Curso en DynamoDB 
+    handler: funciones-db/guardar-datos.guardar_producto
+    events:
+      - httpApi: # Crear end-point POST para guardar datos en DinamoDB
+          path: '/api/guardar-producto'
+          method: post
+
+#Recursos          
+resources:
+  Resources:
+    productoTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        TableName: producto
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
