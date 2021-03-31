@@ -1,22 +1,23 @@
 'use strict';
 
-const fetch = require('node-fetch')
+const swapi = require('./conexion-swapi')
+const api = require('../utils/api-response')
 
 const modelo = 'films'
 
+/**
+ * Función para recuperar lista de peliculas de SWAPI
+ */
 const recuperar_peliculas = async (event, context, callback) => {
   try{
     // Obtener datos del API Swapi
-    let data_swapi = await fetch(
-      process.env.BASE_URL_SWAPI+"/"+modelo, {
-      method: 'GET',                   
-      headers: {
-        'Content-type': 'application/json'
-      }
-    });
-    //convertir la respuesta de SWAPI a formato JSON
-    let response_swapi_films = await data_swapi.json().catch(e => { if (e) { throw e } });
-    let data_films = response_swapi_films.results;
+    let data_swapi = await swapi.consultar(process.env.BASE_URL_SWAPI+"/"+modelo,'GET');
+    //Verificar si hubo error al consultar a SWAPI
+    if (!data_swapi.exito){
+      callback(data_swapi.error, null);    
+      return;
+    }    
+    let data_films = data_swapi.datos.results;
     let array_peliculas = [];
     let film;
     for(film of data_films){
@@ -41,15 +42,7 @@ const recuperar_peliculas = async (event, context, callback) => {
     }   
 
     //Construir respuesta
-    const response = {
-      statusCode: 200,
-      body: JSON.stringify({
-        total: response_swapi_films.count,
-        siguiente: response_swapi_films.next,
-        anterior: response_swapi_films.previous,
-        resultados: array_peliculas
-      }),
-    };
+    let response = await api.construirRespuestaSwapi(200, data_swapi.datos, array_peliculas);
     //enviar respuesta
     callback(null, response);
   }catch(e){
@@ -58,21 +51,23 @@ const recuperar_peliculas = async (event, context, callback) => {
   return; 
 };
 
+/**
+ * Función que recuperar datos de una sola pelicula de SWAPI
+ */
 const recuperar_pelicula = async(event, context, callback) => {
 
   try{
     //Recuperar parametros
     const id_pelicula =  event.pathParameters.id;
     // Obtener datos del API Swapi
-    let data_swapi = await fetch(
-      process.env.BASE_URL_SWAPI+"/"+modelo+"/"+id_pelicula, {
-      method: 'GET',                   
-      headers: {
-        'Content-type': 'application/json'
-      }
-    });
+    let data_swapi = await swapi.consultar(process.env.BASE_URL_SWAPI+"/"+modelo+"/"+id_pelicula,'GET');
+    //Verificar si hubo error al consultar a SWAPI
+    if (!data_swapi.exito){
+      callback(data_swapi.error, null);    
+      return;
+    } 
     //convertir la respuesta de SWAPI a formato JSON
-    let film = await data_swapi.json().catch(e => { if (e) { throw e } });
+    let film = await data_swapi.datos
    
     //Mapear los atributos del modelo film y traducirlos a español
     let datos_esp_pelicula = {
@@ -93,10 +88,7 @@ const recuperar_pelicula = async(event, context, callback) => {
     }; 
 
     //Construir respuesta
-    const response = {
-      statusCode: 200,
-      body: JSON.stringify(datos_esp_pelicula),
-    };
+    let response = await api.construirRespuestaGeneral(200,datos_esp_pelicula);
     //enviar respuesta
     callback(null, response);
   }catch(e){

@@ -1,22 +1,20 @@
 'use strict';
 
-const fetch = require('node-fetch')
+const swapi = require('./conexion-swapi')
+const api = require('../utils/api-response')
 
 const modelo = 'vehicles'
 
 module.exports.recuperar_vehiculos = async (event, context, callback) => {
   try{
     // Obtener datos del API Swapi
-    let data_swapi = await fetch(
-      process.env.BASE_URL_SWAPI+"/"+modelo, {
-      method: 'GET',                   
-      headers: {
-        'Content-type': 'application/json'
-      }
-    });
-    //convertir la respuesta de SWAPI a formato JSON
-    let response_swapi = await data_swapi.json().catch(e => { if (e) { throw e } });
-    let data_vehiculos = response_swapi.results;
+    let data_swapi = await swapi.consultar(process.env.BASE_URL_SWAPI+"/"+modelo,'GET');
+    //Verificar si hubo error al consultar a SWAPI
+    if (!data_swapi.exito){
+      callback(data_swapi.error, null);    
+      return;
+    }    
+    let data_vehiculos = data_swapi.datos.results;
     let array_vehiculos = [];
     let e;
     for(e of data_vehiculos){
@@ -43,15 +41,7 @@ module.exports.recuperar_vehiculos = async (event, context, callback) => {
     }   
 
     //Construir respuesta
-    const response = {
-      statusCode: 200,
-      body: {
-        total: response_swapi.count,
-        siguiente: response_swapi.next,
-        anterior: response_swapi.previous,
-        resultados: array_vehiculos
-      },
-    };
+    let response = await api.construirRespuestaSwapi(200, data_swapi.datos, array_vehiculos);
     //enviar respuesta
     callback(null, response);
   }catch(e){
